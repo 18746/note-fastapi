@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from datetime import datetime
 import random
 
@@ -26,6 +27,10 @@ def get_no(sign: str):
 
     return f"{sign}{date_time_strf}{int(ran_int)}"
 
+
+class UnitFormat(BaseModel):
+    state: bool
+    message: str = "成功"
 
 if __name__ == '__main__':
     print(get_no("C_"))

@@ -93,9 +93,8 @@ async def delete_unit(phone: Annotated[str, Header()], course_no: str, unit_no: 
             await prev_unit[0].save()
 
         # 2.1 更新列表name序号
-        parent_child = UnitCrud.unit_sort(parent_child)
         path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
-        await UnitCrud.update_later_name(parent_child, path)
+        await UnitCrud.refresh_list_name(all_unit, unit.parent_no, path)
 
         # 2.2 深度删除子节点
         all_unit.append(unit)

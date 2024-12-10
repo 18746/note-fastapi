@@ -182,35 +182,46 @@ async def create(phone: Annotated[str, Header()], course_no: str, unit: UnitSche
     if await CourseCrud.has_course(phone, course_no):
         curr_course = await CourseCrud.get_course(phone, course_no)
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
-        parent_child = UnitCrud.unit_sort([item for item in all_unit if item.parent_no == unit.parent_no])
 
         # 1.1 格式校验
-        UnitCrud.create_format(all_unit, unit.model_dump())
+        # 校验父节点
+        _format = UnitCrud.insert_parent_no_format(all_unit, unit.parent_no)
+        if not _format.state:
+            raise ErrorMessage(
+                status_code=500,
+                message=_format.message
+            )
+        # 校验下一节点
+        _format = UnitCrud.insert_next_no_format(all_unit, unit.parent_no, unit.next_no)
+        if not _format.state:
+            raise ErrorMessage(
+                status_code=500,
+                message=_format.message
+            )
+        # 校验name
+        _format = UnitCrud.insert_name_format(all_unit, unit.parent_no, unit.name)
+        if not _format.state:
+            raise ErrorMessage(
+                status_code=500,
+                message=_format.message
+            )
 
         # 2.1 补充name 序号
-        next_unit = [item for item in parent_child if item.unit_no == unit.next_no]
-        if next_unit:
-            no_name = UnitCrud.name_split(next_unit[0].name)
-            unit.name = UnitCrud.num_name_connect(no_name[0], unit.name)
-        else:
-            unit.name = UnitCrud.num_name_connect(len(parent_child) + 1, unit.name)
-            pass
+        unit.name = UnitCrud.init_name_no(all_unit, unit.model_dump())
 
-        # 3.1 创建章节
+        # 2.2 创建章节-创建文件
         path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
         unit_model = await UnitCrud.create(phone, course_no, unit.model_dump(exclude_unset=True), path)
+        UnitCrud.create_name(unit_model, path)
+        # 2.2.1 插入列表
         all_unit.append(unit_model)
 
-        # 3.2 新增的章节插入到列表中
-        parent_child.insert(UnitCrud.name_split(unit_model.name)[0] - 1, unit_model)
+        # 2.3 更新前面章节的下一个节点数据
+        await UnitCrud.refresh_link_add(all_unit, unit_model)
 
-        # 3.3 更新前面章节的下一个节点数据
-        prev_unit = [item for item in parent_child if item.next_no == unit_model.next_no and item.unit_no != unit_model.unit_no]
-        if prev_unit:
-            await UnitCrud.update(prev_unit[0], {"next_no": unit_model.unit_no})
-
-        # 3.4 更新列表name序号
-        await UnitCrud.update_later_name(parent_child, path=path)
+        # 2.4 更新列表name序号
+        path = UnitCrud.get_deep_path(curr_course, all_unit, unit_model.parent_no, True)
+        await UnitCrud.refresh_list_name(all_unit, unit_model.parent_no, path)
 
         return unit_model
     raise ErrorMessage(
@@ -230,65 +241,126 @@ async def update(phone: Annotated[str, Header()], course_no: str, unit_no: str, 
     if await UnitCrud.has_unit(phone, course_no, unit_no):
         curr_course = await CourseCrud.get_course(phone, course_no)
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
+        # 0.0 初始化更新的数据
         old_unit = [item for item in all_unit if item.unit_no == unit_no][0]
-
-        # 0.0 过滤掉要更新的节点，初始化要更新的数据
-        all_unit = [item for item in all_unit if item.unit_no != old_unit.unit_no]
         unit = UnitCrud.update_init(old_unit, unit.model_dump(exclude_unset=True))
 
-        # 0.1 更改老节点前后的连接
-        old_parent_child = [item for item in all_unit if item.parent_no == old_unit.parent_no]
-        old_prev_unit = [item for item in old_parent_child if item.next_no == old_unit.unit_no]
-        if old_prev_unit:
-            old_prev_unit[0].next_no = old_unit.next_no
+        if unit.parent_no != old_unit.parent_no:
+            # 1.1 格式校验
+            # 校验父节点
+            _format = UnitCrud.insert_parent_no_format(all_unit, unit.parent_no)
+            if not _format.state:
+                raise ErrorMessage(
+                    status_code=500,
+                    message=_format.message
+                )
+            # 校验下一节点
+            _format = UnitCrud.insert_next_no_format(all_unit, unit.parent_no, unit.next_no)
+            if not _format.state:
+                raise ErrorMessage(
+                    status_code=500,
+                    message=_format.message
+                )
+            # 校验name
+            _format = UnitCrud.insert_name_format(all_unit, unit.parent_no, unit.name)
+            if not _format.state:
+                raise ErrorMessage(
+                    status_code=500,
+                    message=_format.message
+                )
 
-        # 0.2 重新排序
-        old_parent_child = UnitCrud.unit_sort(old_parent_child)
-        parent_child = UnitCrud.unit_sort([item for item in all_unit if item.parent_no == unit.parent_no])
+            # 2.1 格式校验通过，从原位置去除
+            await UnitCrud.refresh_link_del(all_unit, old_unit)
+            all_unit = [item for item in all_unit if item.unit_no != old_unit.unit_no]
 
-        # 1.1 格式校验
-        UnitCrud.create_format(all_unit, unit.model_dump(exclude_unset=True))
-
-        # 2.1 老节点，前后连接更新
-        if old_prev_unit:
-            await old_prev_unit[0].save()
-
-        # 2.2 老节点name更新
-        new_path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
-        old_path = new_path
-        if old_unit.parent_no != unit.parent_no:
+            # 2.2 更新老链接的name序号
             old_path = UnitCrud.get_deep_path(curr_course, all_unit, old_unit.parent_no, True)
-            await UnitCrud.update_later_name(old_parent_child, old_path)
+            await UnitCrud.refresh_list_name(all_unit, old_unit.parent_no, path=old_path)
 
-        # 3.1 补充name 序号
-        next_unit = [item for item in parent_child if item.unit_no == unit.next_no]
-        if next_unit:
-            no_name = UnitCrud.name_split(next_unit[0].name)
-            unit.name = UnitCrud.num_name_connect(no_name[0] - 1, unit.name)
+            # 3.1 获取name序号
+            unit.name = UnitCrud.init_name_no(all_unit, unit.model_dump())
+
+            # 3.2 更新数据
+            new_path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
+            UnitCrud.update_name(old_unit, unit.model_dump(), old_path=old_path, new_path=new_path)
+            unit_model = await UnitCrud.update(old_unit, unit.model_dump())
+            # 3.2.1 插入列表
+            all_unit.append(unit_model)
+
+            # 3.3 更新前面章节的下一个节点数据
+            await UnitCrud.refresh_link_add(all_unit, unit_model)
+
+            # 3.4 更新新链接的name序号
+            new_path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
+            await UnitCrud.refresh_list_name(all_unit, unit_model.parent_no, path=new_path)
+
+            return unit_model
         else:
-            unit.name = UnitCrud.num_name_connect(len(parent_child) + 1, unit.name)
-            pass
+            if unit.next_no != old_unit.next_no:
+                # 1.0 从原位置去除
+                old_prve = await UnitCrud.refresh_link_del(all_unit, old_unit, auto_save=False)
+                all_unit = [item for item in all_unit if item.unit_no != old_unit.unit_no]
 
-        # 3.2 从目录变为md的，要删除目录的子节点
-        if not unit.is_menu and old_unit.is_menu:
-            li = [item for item in all_unit if item.parent_no == unit_no]
-            for it in li:
-                await UnitCrud.delete_deep_unit(all_unit, it.unit_no)
+                # 1.1 格式校验
+                # 校验父节点
+                _format = UnitCrud.insert_parent_no_format(all_unit, unit.parent_no)
+                if not _format.state:
+                    raise ErrorMessage(
+                        status_code=500,
+                        message=_format.message
+                    )
+                # 校验下一节点
+                _format = UnitCrud.insert_next_no_format(all_unit, unit.parent_no, unit.next_no)
+                if not _format.state:
+                    raise ErrorMessage(
+                        status_code=500,
+                        message=_format.message
+                    )
+                # 校验name
+                _format = UnitCrud.insert_name_format(all_unit, unit.parent_no, unit.name)
+                if not _format.state:
+                    raise ErrorMessage(
+                        status_code=500,
+                        message=_format.message
+                    )
 
-        # 4.1 更新章节数据
-        unit_model = await UnitCrud.update(old_unit, unit.model_dump(exclude_unset=True), old_path=old_path, new_path=new_path)
-        all_unit.append(unit_model)
+                # 2.1 格式校验通过，从原位置去除
+                if old_prve:
+                    await old_prve.save()
 
-        # 4.2 更新列表前后节点的连接
-        prev_unit = [item for item in parent_child if item.next_no == unit_model.next_no]
-        if prev_unit:
-            await UnitCrud.update(prev_unit[0], {"next_no": unit_model.unit_no})
+                # 3.1 获取name序号
+                unit.name = UnitCrud.init_name_no(all_unit, unit.model_dump())
 
-        # 4.3 章节插入到新位置列表中，更新列表name序号
-        parent_child.insert(UnitCrud.name_split(unit_model.name)[0] - 1, unit_model)
-        await UnitCrud.update_later_name(parent_child, new_path)
+                # 3.2 更新数据
+                path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
+                UnitCrud.update_name(old_unit, unit.model_dump(), path=path)
+                unit_model = await UnitCrud.update(old_unit, unit.model_dump())
+                # 3.2.1 插入列表
+                all_unit.append(unit_model)
 
-        return unit_model
+                # 3.3 更新前面章节的下一个节点数据
+                await UnitCrud.refresh_link_add(all_unit, unit_model)
+
+                # 3.4 更新新链接的name序号
+                path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
+                await UnitCrud.refresh_list_name(all_unit, unit_model.parent_no, path=path)
+
+                return unit_model
+            else:
+                # 1.0 从原位置去除
+                all_unit = [item for item in all_unit if item.unit_no != old_unit.unit_no]
+
+                # 2.1 获取name序号
+                unit.name = UnitCrud.init_name_no(all_unit, unit.model_dump())
+
+                # 2.2 更新数据
+                path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
+                UnitCrud.update_name(old_unit, unit.model_dump(), path=path)
+                unit_model = await UnitCrud.update(old_unit, unit.model_dump())
+                # 2.2.1 插入列表
+                all_unit.append(unit_model)
+
+                return unit_model
     raise ErrorMessage(
         status_code=500,
         message="该课程不存在，不能修改"
@@ -315,9 +387,8 @@ async def delete_unit(phone: Annotated[str, Header()], course_no: str, unit_no: 
             await prev_unit[0].save()
 
         # 2.1 更新列表name序号
-        parent_child = UnitCrud.unit_sort(parent_child)
         path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)
-        await UnitCrud.update_later_name(parent_child, path)
+        await UnitCrud.refresh_list_name(all_unit, unit.parent_no, path)
 
         # 2.2 深度删除子节点
         all_unit.append(unit)

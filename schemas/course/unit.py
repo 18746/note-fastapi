@@ -10,7 +10,6 @@ class UnitCreateIn(BaseModel):
 
 class UpdateUnitIn(BaseModel):
     name: str = ""
-
     is_menu: bool = False
     parent_no: str | None = None
     next_no: str | None = None
