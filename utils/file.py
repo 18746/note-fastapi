@@ -10,8 +10,8 @@ class File:
         return os.path.exists(folder_name)
 
     @staticmethod
-    def create(file_name: str, context: bytes=''):
-        with open(file_name, "w") as file_obj:
+    def create(file_name: str, context: bytes = b''):
+        with open(file_name, "wb") as file_obj:
             file_obj.write(context)
 
     @staticmethod
