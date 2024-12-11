@@ -113,17 +113,17 @@ def update_name(unit_model: UnitModel, unit: dict, old_path: str = "", new_path:
     if old_path and new_path:
         if new_is_menu and not old_is_menu:
             FolderConfig.open_path(old_path)
-            content = FileConfig.read(old_name + ".md")
+            content = FileConfig.read(old_name + ".md", b_flag=False)
             FileConfig.delete(old_name + ".md")
             FolderConfig.create(new_name)
-            FileConfig.create(new_name + "/00.index.md", content)
+            FileConfig.create(new_name + "/00.index.md", content.replace("picture." + old_name, "picture.00.index"), b_flag=False)
             FolderConfig.move(old_path, new_path + "/" + new_name, "picture." + old_name, "picture.00.index")
         elif not new_is_menu and old_is_menu:
             FolderConfig.open_path(old_path)
-            content = FileConfig.read(old_name + "/00.index.md")
+            content = FileConfig.read(old_name + "/00.index.md", b_flag=False)
             FolderConfig.move(old_path + "/" + old_name, new_path, "picture.00.index", "picture." + new_name)
             FolderConfig.delete(old_name)
-            FileConfig.create(new_name + ".md", content)
+            FileConfig.create(new_name + ".md", content.replace("picture." + old_name, "picture.00.index"), b_flag=False)
         else:
             refresh_name(unit_model, new_name, old_path, new_path)
 

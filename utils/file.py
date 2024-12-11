@@ -10,8 +10,11 @@ class File:
         return os.path.exists(folder_name)
 
     @staticmethod
-    def create(file_name: str, context: bytes = b''):
-        with open(file_name, "wb") as file_obj:
+    def create(file_name: str, context: bytes | str = b'', b_flag: bool = True):
+        mode = "w"
+        if b_flag:
+            mode += "b"
+        with open(file_name, mode) as file_obj:
             file_obj.write(context)
 
     @staticmethod
@@ -31,19 +34,28 @@ class File:
             return False
 
     @staticmethod
-    def read(file_name: str) -> bytes:
-        file_obj =  open(file_name, 'rb')
+    def read(file_name: str, b_flag: bool = True) -> str | bytes:
+        mode = "r"
+        if b_flag:
+            mode += "b"
+        file_obj =  open(file_name, mode)
         content = file_obj.read()
         file_obj.close()
         return content
 
     @staticmethod
-    def write(file_name: str, context: bytes, append: bool = False):
+    def write(file_name: str, context: bytes | str, append: bool = False, b_flag: bool = True):
         if append:
-            with open(file_name, "ab") as file_obj:
+            mode = "a"
+            if b_flag:
+                mode += "b"
+            with open(file_name, mode) as file_obj:
                 file_obj.write(context)
         else:
-            with open(file_name, "wb") as file_obj:
+            mode = "w"
+            if b_flag:
+                mode += "b"
+            with open(file_name, mode) as file_obj:
                 file_obj.write(context)
 
     @staticmethod

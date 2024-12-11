@@ -62,10 +62,10 @@ async def get_content(phone: Annotated[str, Header()], course_no: str, unit_no: 
         child = UnitCrud.unit_sort([UnitSchemas.UnitOut(**dict(item)) for item in all_unit if item.parent_no == unit_no])
         if curr_unit.is_menu:
             FolderConfig.open_path(f"/{path}/{curr_unit.name}")
-            content = str(FileConfig.read("00.index.md"), encoding="utf-8")
+            content = FileConfig.read("00.index.md", b_flag=False)
         else:
             FolderConfig.open_path(f"/{path}")
-            content = str(FileConfig.read(f"{curr_unit.name}.md"), encoding="utf-8")
+            content = FileConfig.read(f"{curr_unit.name}.md", b_flag=False)
 
         return dict(
             child=child,

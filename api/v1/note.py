@@ -416,10 +416,10 @@ async def update_context(phone: Annotated[str, Header()], course_no: str, unit_n
         path = UnitCrud.get_deep_path(curr_course, all_unit, unit_no)
         if curr_unit.is_menu:
             FolderConfig.open_path(f"/{path}/{curr_unit.name}")
-            FileConfig.write("00.index.md", text.encode("utf-8"))
+            FileConfig.write("00.index.md", text, b_flag=False)
         else:
             FolderConfig.open_path(f"/{path}")
-            FileConfig.write(f"{curr_unit.name}.md", text.encode("utf-8"))
+            FileConfig.write(f"{curr_unit.name}.md", text, b_flag=False)
 
         curr_course.update_num += 1
         curr_unit.update_time = datetime.now()
@@ -442,13 +442,10 @@ async def upload_picture(phone: Annotated[str, Header()], course_no: str, unit_n
         curr_course = await CourseCrud.get_course(phone, course_no)
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
 
-        if picture:
-            path = UnitCrud.upload_picture(curr_course, all_unit, unit_no, picture)
-            return dict(
-                path=path,
-            )
-        else:
-            return False
+        path = UnitCrud.upload_picture(curr_course, all_unit, unit_no, picture)
+        return dict(
+            path=path,
+        )
     raise ErrorMessage(
         status_code=500,
         message="课程单元不存在，查询不到"
