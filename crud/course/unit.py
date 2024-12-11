@@ -1,3 +1,4 @@
+from fastapi import UploadFile
 from datetime import datetime
 
 from utils.exception import ErrorMessage
@@ -59,9 +60,11 @@ def create_name(unit_model: UnitModel, path: str):
         FolderConfig.create(unit_model.name)
         FolderConfig.open_path(path + '/' + unit_model.name)
         FileConfig.create("00.index.md")
+        FolderConfig.create(f"picture.00.index")
     else:
         FolderConfig.open_path(path)
         FileConfig.create(unit_model.name + ".md")
+        FolderConfig.create(f"picture.{unit_model.name}")
 
 
 # 更新章节
@@ -114,15 +117,32 @@ def update_name(unit_model: UnitModel, unit: dict, old_path: str = "", new_path:
             FileConfig.delete(old_name + ".md")
             FolderConfig.create(new_name)
             FileConfig.create(new_name + "/00.index.md", content)
+            FolderConfig.move(old_path, new_path + "/" + new_name, "picture." + old_name, "picture.00.index")
         elif not new_is_menu and old_is_menu:
             FolderConfig.open_path(old_path)
             content = FileConfig.read(old_name + "/00.index.md")
+            FolderConfig.move(old_path + "/" + old_name, new_path, "picture.00.index", "picture." + new_name)
             FolderConfig.delete(old_name)
             FileConfig.create(new_name + ".md", content)
         else:
             refresh_name(unit_model, new_name, old_path, new_path)
 
     return unit_model
+
+# 上传图片
+def upload_picture(course: CourseModel, all_unit: list[UnitModel], unit_no: str, picture: UploadFile):
+    curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
+
+    path = get_deep_path(course, all_unit, unit_no)
+    if curr_unit.is_menu:
+        FolderConfig.open_path(f"/{path}/{curr_unit.name}/picture.{curr_unit.name}")
+    else:
+        FolderConfig.open_path(f"/{path}/picture.{curr_unit.name}")
+
+    name_suffix = picture.filename.split(".")[-1]
+    name = util.get_no("img_") + '.' + name_suffix
+    FileConfig.write(name, picture.file.read())
+    return f"picture.{curr_unit.name}/{name}"
 
 
 # 深度删除章节 model
@@ -256,10 +276,12 @@ def refresh_name(unit_model: UnitModel, new_name: str, old_path: str = "", new_p
         if old_name != new_name:
             FolderConfig.open_path(old_path)
             FolderConfig.move(old_path, new_path, old_name, new_name)
+            FolderConfig.move(old_path, new_path, "picture." + old_name, "picture." + new_name)
     else:
         if old_name != new_name:
             FolderConfig.open_path(old_path)
             FolderConfig.move(old_path, new_path, old_name + ".md", new_name + ".md")
+            FolderConfig.move(old_path, new_path, "picture." + old_name, "picture." + new_name)
 
 # --------------------------------------------------------------------------------------------
 # 截取序号/名称

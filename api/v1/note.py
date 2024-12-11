@@ -398,13 +398,14 @@ async def delete_unit(phone: Annotated[str, Header()], course_no: str, unit_no: 
             FolderConfig.delete(unit.name)
         else:
             FileConfig.delete(unit.name + ".md")
+            FolderConfig.delete(f"picture.{unit.name}")
         return await UnitCrud.delete_deep_unit(all_unit, unit.unit_no)
 
 # 章节更新内容
 @unit_router.put(
     "/context/{course_no}/{unit_no}",
     summary="更新章节内容",
-    description="返回 true",
+    description="返回 更新后的值",
 )
 async def update_context(phone: Annotated[str, Header()], course_no: str, unit_no: str, text: Annotated[str, Body()]):
     if await UnitCrud.has_unit(phone=phone, course_no=course_no, unit_no=unit_no):
@@ -429,6 +430,30 @@ async def update_context(phone: Annotated[str, Header()], course_no: str, unit_n
         status_code=500,
         message="课程单元不存在，查询不到"
     )
+
+# 章节更新内容
+@unit_router.post(
+    "/picture/{course_no}/{unit_no}",
+    summary="章节上传图片",
+    description="返回 上传位置",
+)
+async def upload_picture(phone: Annotated[str, Header()], course_no: str, unit_no: str, picture: UploadFile):
+    if await UnitCrud.has_unit(phone=phone, course_no=course_no, unit_no=unit_no):
+        curr_course = await CourseCrud.get_course(phone, course_no)
+        all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
+
+        if picture:
+            path = UnitCrud.upload_picture(curr_course, all_unit, unit_no, picture)
+            return dict(
+                path=path,
+            )
+        else:
+            return False
+    raise ErrorMessage(
+        status_code=500,
+        message="课程单元不存在，查询不到"
+    )
+
 
 # ------------------------------------------------------------------------------------------笔记
 

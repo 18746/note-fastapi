@@ -60,8 +60,7 @@ def update_picture(user_model: UserInfoModel, picture: UploadFile):
 
     name_suffix = picture.filename.split(".")[-1]
     name = util.get_no("img_") + '.' + name_suffix
-    with open(name, "wb") as f:
-        f.write(picture.file.read())
+    FileConfig.write(name, picture.file.read())
 
     return name
 

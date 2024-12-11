@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Header
+from fastapi.responses import FileResponse, Response
 from typing import Annotated
 
 from utils.exception import ErrorMessage
@@ -75,7 +76,29 @@ async def get_content(phone: Annotated[str, Header()], course_no: str, unit_no: 
         message="课程单元不存在，查询不到"
     )
 
-# 删除章节
+# 获取课程图标
+@unit_router.get(
+    "/picture/{phone}/{course_no}/{unit_no}/{file_path:path}",
+    summary="获取课程图标",
+    description="返回图片",
+    deprecated=False
+)
+async def get_picture(phone: str, course_no: str, unit_no: str, file_path):
+    curr_course = await CourseCrud.get_course(phone, course_no)
+    all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
+    curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
+
+    path = UnitCrud.get_deep_path(curr_course, all_unit, unit_no)
+    if curr_unit.is_menu:
+        FolderConfig.open_path(f"/{path}/{curr_unit.name}")
+    else:
+        FolderConfig.open_path(f"/{path}")
+
+    print(path, curr_unit.name)
+    return Response(content=FileConfig.read(file_path))
+
+
+    # 删除章节
 @unit_router.delete(
     "/{course_no}/{unit_no}",
     summary="删除章节，子目录也删除",

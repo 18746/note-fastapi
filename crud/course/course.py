@@ -107,8 +107,7 @@ def update_picture(course_model: CourseModel, picture: UploadFile):
 
     name_suffix = picture.filename.split(".")[-1]
     name = get_no("img_") + '.' + name_suffix
-    with open(name, "wb") as f:
-        f.write(picture.file.read())
+    FileConfig.write(name, picture.file.read())
 
     return name
 
