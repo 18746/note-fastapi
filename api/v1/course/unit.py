@@ -46,26 +46,30 @@ async def get_unit(phone: Annotated[str, Header()], course_no: str, unit_no: str
 
 # 获取章节内容
 @unit_router.get(
-    "/context/{course_no}/{unit_no}",
+    "/content/{course_no}/{unit_no}",
     summary="获取章节内容",
     description="返回新增的课程章节",
 )
-async def get_context(phone: Annotated[str, Header()], course_no: str, unit_no: str):
+async def get_content(phone: Annotated[str, Header()], course_no: str, unit_no: str):
     if await UnitCrud.has_unit(phone=phone, course_no=course_no, unit_no=unit_no):
         curr_course = await CourseCrud.get_course(phone, course_no)
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
         curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
 
-        path = UnitCrud.get_deep_path(curr_course, all_unit, course_no)
-        context: str = ""
+        path = UnitCrud.get_deep_path(curr_course, all_unit, unit_no)
+        content: str = ""
+        child = UnitCrud.unit_sort([UnitSchemas.UnitOut(**dict(item)) for item in all_unit if item.parent_no == unit_no])
         if curr_unit.is_menu:
             FolderConfig.open_path(f"/{path}/{curr_unit.name}")
-            context = str(FileConfig.read("00.index.md"), encoding="utf-8")
+            content = str(FileConfig.read("00.index.md"), encoding="utf-8")
         else:
             FolderConfig.open_path(f"/{path}")
-            context = str(FileConfig.read(f"{curr_unit.name}.md"), encoding="utf-8")
+            content = str(FileConfig.read(f"{curr_unit.name}.md"), encoding="utf-8")
 
-        return context
+        return dict(
+            child=child,
+            content=content
+        )
     raise ErrorMessage(
         status_code=500,
         message="课程单元不存在，查询不到"

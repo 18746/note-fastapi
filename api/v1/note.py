@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Header, UploadFile, Body, Form
 from typing import Annotated
+from datetime import datetime
 from utils.exception import ErrorMessage
 from utils.file import Folder as FolderConfig, File as FileConfig
 
@@ -411,7 +412,7 @@ async def update_context(phone: Annotated[str, Header()], course_no: str, unit_n
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
         curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
 
-        path = UnitCrud.get_deep_path(curr_course, all_unit, course_no)
+        path = UnitCrud.get_deep_path(curr_course, all_unit, unit_no)
         if curr_unit.is_menu:
             FolderConfig.open_path(f"/{path}/{curr_unit.name}")
             FileConfig.write("00.index.md", text.encode("utf-8"))
@@ -419,7 +420,9 @@ async def update_context(phone: Annotated[str, Header()], course_no: str, unit_n
             FolderConfig.open_path(f"/{path}")
             FileConfig.write(f"{curr_unit.name}.md", text.encode("utf-8"))
 
-        return True
+        curr_course.update_num += 1
+        curr_unit.update_time = datetime.now()
+        return text
     raise ErrorMessage(
         status_code=500,
         message="课程单元不存在，查询不到"

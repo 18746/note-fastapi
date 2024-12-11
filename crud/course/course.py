@@ -85,7 +85,6 @@ async def update(course_model: CourseModel, course: dict) -> CourseModel:
     if "description" in course:
         course_model.description = course["description"]
 
-    course_model.update_num = course_model.update_num + 1
     if "click_count" in course:
         course_model.click_count = course["click_count"]
 
