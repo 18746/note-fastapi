@@ -422,6 +422,8 @@ async def update_context(phone: Annotated[str, Header()], course_no: str, unit_n
 
         curr_course.update_num += 1
         curr_unit.update_time = datetime.now()
+        await curr_course.save()
+        await curr_unit.save()
         return text
     raise ErrorMessage(
         status_code=500,
