@@ -27,7 +27,7 @@ course_router = APIRouter(
     description="返回该用户的所有课程笔记",
     response_model=list[CourseSchemas.CourseOut]
 )
-async def get_phone(phone: Annotated[str, Header()]):
+async def get_phone(phone: str):
     return await CourseCrud.get_phone(phone)
 
 # 查询课程
@@ -37,19 +37,19 @@ async def get_phone(phone: Annotated[str, Header()]):
     description="返回该用户的指定类型的课程",
     response_model=list[CourseSchemas.CourseOut]
 )
-async def get_type(phone: Annotated[str, Header()], type_no: str):
+async def get_type(phone: str, type_no: str):
     if type_no == "":
         type_no = None
     return await CourseCrud.get_type(phone, type_no)
 
 # 查询课程
 @course_router.get(
-    "/{course_no}",
+    "/{phone}/{course_no}",
     summary="查询指定课程笔记",
     description="返回该用户的指定课程笔记",
     response_model=CourseSchemas.CourseOut
 )
-async def get_course(phone: Annotated[str, Header()], course_no: str):
+async def get_course(phone: str, course_no: str):
     if await CourseCrud.has_course(phone, course_no):
         return await CourseCrud.get_course(phone, course_no)
     raise ErrorMessage(
@@ -75,12 +75,12 @@ async def get_picture(phone: str, name: str, file_path: str):
 
 # 删除课程
 @course_router.delete(
-    "/{course_no}",
+    "/{phone}/{course_no}",
     summary="删除课程",
     description="返回删除的数量",
     deprecated=True
 )
-async def delete(phone: Annotated[str, Header()], course_no: str):
+async def delete(phone: str, course_no: str):
     if await CourseCrud.has_course(phone, course_no):
         course_model = await CourseCrud.get_course(phone, course_no)
         # 先删除课程下的所有章节

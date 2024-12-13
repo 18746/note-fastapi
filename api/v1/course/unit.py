@@ -21,23 +21,23 @@ unit_router = APIRouter(
 
 # 获取课程的所有章节
 @unit_router.get(
-    "/{course_no}",
+    "/{phone}/{course_no}",
     summary="获取课程的所有章节，包含深度",
     description="返回该课程的所有章节",
     # response_model=list[UnitSchemas.UnitOut]
 )
-async def get_course(phone: Annotated[str, Header()], course_no: str):
+async def get_course(phone: str, course_no: str):
     all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
     return UnitCrud.unit_deep_format(all_unit)
 
 # 获取章节
 @unit_router.get(
-    "/{course_no}/{unit_no}",
+    "/{phone}/{course_no}/{unit_no}",
     summary="获取章节",
     description="返回对应章节信息",
     response_model=UnitSchemas.UnitOut
 )
-async def get_unit(phone: Annotated[str, Header()], course_no: str, unit_no: str):
+async def get_unit(phone: str, course_no: str, unit_no: str):
     if await UnitCrud.has_unit(phone=phone, course_no=course_no, unit_no=unit_no):
         return await UnitCrud.get_unit(phone=phone, course_no=course_no, unit_no=unit_no)
     raise ErrorMessage(
@@ -47,11 +47,11 @@ async def get_unit(phone: Annotated[str, Header()], course_no: str, unit_no: str
 
 # 获取章节内容
 @unit_router.get(
-    "/content/{course_no}/{unit_no}",
+    "/{phone}/{course_no}/{unit_no}/content",
     summary="获取章节内容",
     description="返回新增的课程章节",
 )
-async def get_content(phone: Annotated[str, Header()], course_no: str, unit_no: str):
+async def get_content(phone: str, course_no: str, unit_no: str):
     if await UnitCrud.has_unit(phone=phone, course_no=course_no, unit_no=unit_no):
         curr_course = await CourseCrud.get_course(phone, course_no)
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
@@ -99,13 +99,14 @@ async def get_picture(phone: str, course_no: str, unit_no: str, file_path):
 
 
     # 删除章节
+
 @unit_router.delete(
-    "/{course_no}/{unit_no}",
+    "/{phone}/{course_no}/{unit_no}",
     summary="删除章节，子目录也删除",
     description="返回删除的章节数",
     deprecated=True
 )
-async def delete_unit(phone: Annotated[str, Header()], course_no: str, unit_no: str):
+async def delete_unit(phone: str, course_no: str, unit_no: str):
     if await UnitCrud.has_unit(phone, course_no, unit_no):
         curr_course = await CourseCrud.get_course(phone, course_no)
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
