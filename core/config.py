@@ -1,7 +1,8 @@
-
+import os
 
 # 根目录
 ROOT_PATH = "Z:/99.笔记"
+PROJECT_PATH = os.getcwd()
 
 # 数据库配置
 TORTOISE_ORM = {
