@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from utils.util import get_no
+from utils import util
 
 from models.course import Type as TypeModel
 
@@ -25,9 +25,9 @@ async def has_name(phone: str, name: str) -> bool:
 # ----------------------------------------------------------------------------------------------增删改
 async def create(phone: str, type_in: dict) -> TypeModel:
     if "type_no" not in type_in:
-        type_in["type_no"] = get_no("T_")
+        type_in["type_no"] = util.get_no("T_")
     if "name" not in type_in:
-        type_in["name"] = get_no("TName_")
+        type_in["name"] = util.get_no("TName_")
     now = datetime.now()
     return await TypeModel.create(
         type_no=type_in["type_no"],

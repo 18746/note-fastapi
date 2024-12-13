@@ -8,7 +8,7 @@ from schemas.user import user  as UserSchema   # 定义数据结构
 from crud.user    import user  as UserCrud     # 操作数据库的函数
 from schemas.user import token as TokenSchema
 
-from utils.util import time_comparison, get_no
+from utils import util
 
 # -----------------------------------------------------------token
 
@@ -30,14 +30,14 @@ async def has_token(phone: str, token: str) -> bool:
 
 # 判断token是否过期
 def no_expire(token: TokenModel) -> bool:
-    return time_comparison(token.update_time + timedelta(minutes=token.time_limit)) >= 0
+    return util.time_comparison(token.update_time + timedelta(minutes=token.time_limit)) >= 0
 
 # ------------------------------------------------------------------------------------------
 # 创建登录信息
 async def create(phone: str, token: dict) -> TokenModel:
     now = datetime.now()
     if "token" not in token:
-        token["token"] = get_no("T_")
+        token["token"] = util.get_no("T_")
     if "time_limit" not in token:
         token["time_limit"] = 30
 
@@ -73,7 +73,7 @@ async def delete(phone: str) -> int:
 # -----------------------------------------------------------------------------------------------------
 # 刷新token
 async def refresh(token_model: TokenModel) -> TokenModel:
-    return await update(token_model, {"token": get_no("T_")})
+    return await update(token_model, {"token": util.get_no("T_")})
 
 # 删除账户过期的登录信息，超出设备数量的也删除
 async def delete_phone_time_limit(user: UserModel):

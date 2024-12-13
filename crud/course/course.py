@@ -1,7 +1,7 @@
 from fastapi import UploadFile
 from datetime import datetime
 
-from utils.util import get_no
+from utils import util
 from utils.file import Folder as FolderConfig, File as FileConfig, get_course_img
 
 from models.course import Course as CourseModel
@@ -28,9 +28,9 @@ async def get_type(phone: str, type_no: str | None) -> list[CourseModel]:
 # ----------------------------------------------------------------------------------增删改
 async def create(phone: str, course: dict) -> CourseModel:
     if "course_no" not in course:
-        course["course_no"] = get_no("C_")
+        course["course_no"] = util.get_no("C_")
     if "name" not in course:
-        course["name"] = get_no("CName_")
+        course["name"] = util.get_no("CName_")
     if "type_no" not in course or course["type_no"] == "":
         course["type_no"] = None
     if "description" not in course:
@@ -64,7 +64,7 @@ async def create(phone: str, course: dict) -> CourseModel:
         image = get_course_img()
         name_suffix = image.name.split('.')[-1]
         FolderConfig.open_path(f"/{phone}/{course_model.name}")
-        name = get_no("img_") + '.' + name_suffix
+        name = util.get_no("img_") + '.' + name_suffix
         FileConfig.write(name, image.context)
         course_model.picture = name
     await course_model.save()
@@ -106,7 +106,7 @@ def update_picture(course_model: CourseModel, picture: UploadFile):
         FileConfig.delete(course_model.picture)
 
     name_suffix = picture.filename.split(".")[-1]
-    name = get_no("img_") + '.' + name_suffix
+    name = util.get_no("img_") + '.' + name_suffix
     FileConfig.write(name, picture.file.read())
 
     return name
