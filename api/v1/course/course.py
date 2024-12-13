@@ -32,7 +32,7 @@ async def get_phone(phone: str):
 
 # 查询课程
 @course_router.get(
-    "/type",
+    "/type/{phone}/{type_no}",
     summary="查询指定类型的课程",
     description="返回该用户的指定类型的课程",
     response_model=list[CourseSchemas.CourseOut]
