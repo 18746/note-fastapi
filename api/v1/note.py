@@ -421,6 +421,17 @@ async def update_context(phone: str, course_no: str, unit_no: str, text: Annotat
             FolderConfig.open_path(f"/{path}")
             FileConfig.write(f"{curr_unit.name}.md", text, b_flag=False)
 
+        if curr_unit.is_menu:
+            FolderConfig.open_path(f"/{path}/{curr_unit.name}/picture.00.index")
+        else:
+            FolderConfig.open_path(f"/{path}/picture.{curr_unit.name}")
+
+        img_name_list = FileConfig.all_file()
+
+        for img_name in img_name_list:
+            if img_name not in text:
+                FileConfig.delete(img_name)
+
         curr_course.update_num += 1
         curr_unit.update_time = datetime.now()
         await curr_course.save()
