@@ -450,8 +450,9 @@ async def upload_picture(phone: str, course_no: str, unit_no: str, picture: Uplo
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
         curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
 
-        path = UnitCrud.upload_picture(curr_course, all_unit, unit_no, picture)
-        picture_url = UnitCrud.get_picture_url(phone, curr_course, curr_unit) + '/' + path
+        path = UnitCrud.get_deep_path(curr_course, all_unit, unit_no)
+
+        picture_url = UnitCrud.upload_picture(path, phone, curr_course, curr_unit, picture)
 
         return dict(
             picture_url=picture_url,

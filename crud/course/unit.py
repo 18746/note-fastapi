@@ -130,25 +130,6 @@ def update_name(unit_model: UnitModel, unit: dict, old_path: str = "", new_path:
 
     return unit_model
 
-# 上传图片
-def upload_picture(course: CourseModel, all_unit: list[UnitModel], unit_no: str, picture: UploadFile):
-    curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
-
-    path = get_deep_path(course, all_unit, unit_no)
-    if curr_unit.is_menu:
-        FolderConfig.open_path(f"/{path}/{curr_unit.name}/picture.00.index")
-    else:
-        FolderConfig.open_path(f"/{path}/picture.{curr_unit.name}")
-
-    name_suffix = picture.filename.split(".")[-1]
-    name = util.get_no("img_") + '.' + name_suffix
-    FileConfig.write(name, picture.file.read())
-    if curr_unit.is_menu:
-        return f"picture.00.index/{name}"
-    else:
-        return f"picture.{curr_unit.name}/{name}"
-
-
 # 深度删除章节 model
 async def delete_deep_unit(all_unit: list[UnitModel], unit_no: str) -> int:
     curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
@@ -355,14 +336,32 @@ def get_context(path: str, phone: str, course: CourseModel, unit: UnitModel):
         return content
 
 def set_context(path: str, phone: str, course: CourseModel, unit: UnitModel, content: str):
-    picture_url = get_picture_url(phone, course, unit)
+    url = get_picture_url(phone, course, unit)
     if unit.is_menu:
         FolderConfig.open_path(f"/{path}/{unit.name}")
-        content = content.replace(f'{picture_url}/picture.00.index', './picture.00.index')
+        content = content.replace(f'{url}/picture.00.index', './picture.00.index')
         FileConfig.write("00.index.md", content, b_flag=False)
     else:
         FolderConfig.open_path(f"/{path}")
-        content = content.replace(f'{picture_url}/picture.{unit.name}', f'./picture.{unit.name}')
+        content = content.replace(f'{url}/picture.{unit.name}', f'./picture.{unit.name}')
         FileConfig.write(f"{unit.name}.md", content, b_flag=False)
+
+# 上传图片
+def upload_picture(path: str, phone: str, course: CourseModel, unit: UnitModel, picture: UploadFile):
+    if unit.is_menu:
+        FolderConfig.open_path(f"/{path}/{unit.name}/picture.00.index")
+    else:
+        FolderConfig.open_path(f"/{path}/picture.{unit.name}")
+
+    name_suffix = picture.filename.split(".")[-1]
+    name = util.get_no("img_") + '.' + name_suffix
+    FileConfig.write(name, picture.file.read())
+
+    url = get_picture_url(phone, course, unit)
+
+    if unit.is_menu:
+        return f"{url}/picture.00.index/{name}"
+    else:
+        return f"{url}/picture.{unit.name}/{name}"
 
 
