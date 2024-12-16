@@ -58,14 +58,9 @@ async def get_content(phone: str, course_no: str, unit_no: str):
         curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
 
         path = UnitCrud.get_deep_path(curr_course, all_unit, unit_no)
-        content: str = ""
         child = UnitCrud.unit_sort([UnitSchemas.UnitOut(**dict(item)) for item in all_unit if item.parent_no == unit_no])
-        if curr_unit.is_menu:
-            FolderConfig.open_path(f"/{path}/{curr_unit.name}")
-            content = FileConfig.read("00.index.md", b_flag=False)
-        else:
-            FolderConfig.open_path(f"/{path}")
-            content = FileConfig.read(f"{curr_unit.name}.md", b_flag=False)
+
+        content = UnitCrud.get_context(path, phone, curr_course, curr_unit)
 
         return dict(
             child=child,
@@ -76,10 +71,10 @@ async def get_content(phone: str, course_no: str, unit_no: str):
         message="课程单元不存在，查询不到"
     )
 
-# 获取课程图标
+# 获取章节内图标
 @unit_router.get(
     "/picture/{phone}/{course_no}/{unit_no}/{file_path:path}",
-    summary="获取课程图标",
+    summary="获取章节内图标",
     description="返回图片",
     deprecated=False
 )
@@ -94,12 +89,11 @@ async def get_picture(phone: str, course_no: str, unit_no: str, file_path):
     else:
         FolderConfig.open_path(f"/{path}")
 
-    print(path, curr_unit.name)
+    print(path, curr_unit.name, file_path)
     return Response(content=FileConfig.read(file_path))
 
 
-    # 删除章节
-
+# 删除章节
 @unit_router.delete(
     "/{phone}/{course_no}/{unit_no}",
     summary="删除章节，子目录也删除",

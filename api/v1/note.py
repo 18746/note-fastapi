@@ -414,12 +414,8 @@ async def update_context(phone: str, course_no: str, unit_no: str, text: Annotat
         curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
 
         path = UnitCrud.get_deep_path(curr_course, all_unit, unit_no)
-        if curr_unit.is_menu:
-            FolderConfig.open_path(f"/{path}/{curr_unit.name}")
-            FileConfig.write("00.index.md", text, b_flag=False)
-        else:
-            FolderConfig.open_path(f"/{path}")
-            FileConfig.write(f"{curr_unit.name}.md", text, b_flag=False)
+
+        UnitCrud.set_context(path, phone, curr_course, curr_unit, text)
 
         if curr_unit.is_menu:
             FolderConfig.open_path(f"/{path}/{curr_unit.name}/picture.00.index")
@@ -452,10 +448,13 @@ async def upload_picture(phone: str, course_no: str, unit_no: str, picture: Uplo
     if await UnitCrud.has_unit(phone=phone, course_no=course_no, unit_no=unit_no):
         curr_course = await CourseCrud.get_course(phone, course_no)
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
+        curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
 
         path = UnitCrud.upload_picture(curr_course, all_unit, unit_no, picture)
+        picture_url = UnitCrud.get_picture_url(phone, curr_course, curr_unit) + '/' + path
+
         return dict(
-            path=path,
+            picture_url=picture_url,
         )
     raise ErrorMessage(
         status_code=500,

@@ -4,6 +4,8 @@ import os
 ROOT_PATH = "Z:/99.笔记"
 PROJECT_PATH = os.getcwd()
 
+IP_URL = "http://127.0.0.1:8070"
+
 # 数据库配置
 TORTOISE_ORM = {
     "connections": {             # 数据库连接

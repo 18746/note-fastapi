@@ -10,6 +10,7 @@ from models.course import Course as CourseModel
 
 from crud.course    import course as CourseCrud
 from schemas.course import unit   as UnitSchemas
+from core.config import IP_URL
 
 
 # 获取某个章节信息
@@ -135,14 +136,17 @@ def upload_picture(course: CourseModel, all_unit: list[UnitModel], unit_no: str,
 
     path = get_deep_path(course, all_unit, unit_no)
     if curr_unit.is_menu:
-        FolderConfig.open_path(f"/{path}/{curr_unit.name}/picture.{curr_unit.name}")
+        FolderConfig.open_path(f"/{path}/{curr_unit.name}/picture.00.index")
     else:
         FolderConfig.open_path(f"/{path}/picture.{curr_unit.name}")
 
     name_suffix = picture.filename.split(".")[-1]
     name = util.get_no("img_") + '.' + name_suffix
     FileConfig.write(name, picture.file.read())
-    return f"picture.{curr_unit.name}/{name}"
+    if curr_unit.is_menu:
+        return f"picture.00.index/{name}"
+    else:
+        return f"picture.{curr_unit.name}/{name}"
 
 
 # 深度删除章节 model
@@ -334,6 +338,31 @@ def get_deep_path(course: CourseModel, all_unit: list[UnitModel], unit_no: str, 
     return f"/{course.phone}/{course.name}{path}"
 
 
-async def get_context(unit_model: UnitModel, path: str):
-    pass
+def get_picture_url(phone: str, course: CourseModel, unit: UnitModel):
+    return f'{IP_URL}/unit/picture/{phone}/{course.course_no}/{unit.unit_no}'
+
+def get_context(path: str, phone: str, course: CourseModel, unit: UnitModel):
+    picture_url = get_picture_url(phone, course, unit)
+    if unit.is_menu:
+        FolderConfig.open_path(f"/{path}/{unit.name}")
+        content = FileConfig.read("00.index.md", b_flag=False)
+        content = content.replace('./picture.00.index', f'{picture_url}/picture.00.index')
+        return content
+    else:
+        FolderConfig.open_path(f"/{path}")
+        content = FileConfig.read(f"{unit.name}.md", b_flag=False)
+        content = content.replace(f'./picture.{unit.name}', f'{picture_url}/picture.{unit.name}')
+        return content
+
+def set_context(path: str, phone: str, course: CourseModel, unit: UnitModel, content: str):
+    picture_url = get_picture_url(phone, course, unit)
+    if unit.is_menu:
+        FolderConfig.open_path(f"/{path}/{unit.name}")
+        content = content.replace(f'{picture_url}/picture.00.index', './picture.00.index')
+        FileConfig.write("00.index.md", content, b_flag=False)
+    else:
+        FolderConfig.open_path(f"/{path}")
+        content = content.replace(f'{picture_url}/picture.{unit.name}', f'./picture.{unit.name}')
+        FileConfig.write(f"{unit.name}.md", content, b_flag=False)
+
 
