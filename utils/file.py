@@ -130,12 +130,12 @@ class Folder:
             # 判断不存在新名称的文件夹
             if not Folder.has(f"{root_path}{new_path}/{new_name}"):
                 shutil.move(f"{root_path}{old_path}/{old_name}", f"{root_path}{new_path}/{new_name}")
-                print(f"rename {old_name} --> {new_path}: 成功，文件夹 已重命名！")
+                print(f"move {old_name} --> {new_name}: 成功，文件夹 已移动！")
                 return True
             else:
-                print(f"rename {old_name} --> {new_name}: 失败，{new_name} 文件夹 已存在！")
+                print(f"move {old_name} --> {new_name}: 失败，{new_name} 文件夹 已存在！")
         else:
-            print(f"rename {old_name} --> {new_name}: 失败，{old_name} 文件夹 不存在！")
+            print(f"move {old_name} --> {new_name}: 失败，{old_name} 文件夹 不存在！")
         return False
 
     @staticmethod

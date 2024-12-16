@@ -273,12 +273,13 @@ def refresh_name(unit_model: UnitModel, new_name: str, old_path: str = "", new_p
     is_menu = unit_model.is_menu
     old_name = unit_model.name
     if is_menu:
-        if old_name != new_name:
+        if old_name != new_name or old_path != new_path:
             FolderConfig.open_path(old_path)
             FolderConfig.move(old_path, new_path, old_name, new_name)
-            FolderConfig.move(old_path, new_path, "picture." + old_name, "picture." + new_name)
+            # 只需要移动最外层课程文件夹即可
+            # FolderConfig.move(old_path, new_path, "picture." + old_name, "picture." + new_name)
     else:
-        if old_name != new_name:
+        if old_name != new_name or old_path != new_path:
             FolderConfig.open_path(old_path)
             FolderConfig.move(old_path, new_path, old_name + ".md", new_name + ".md")
             FolderConfig.move(old_path, new_path, "picture." + old_name, "picture." + new_name)
