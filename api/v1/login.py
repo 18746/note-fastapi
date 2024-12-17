@@ -69,20 +69,14 @@ async def update_picture(phone: Annotated[str, Header()], picture: UploadFile):
     description="返回更新成功/失败 bool",
 )
 async def update_pwd(phone: Annotated[str, Header()], pwds: TokenSchema.UpdatePwdIn):
-    if pwds.old_pwd == pwds.new_pwd:
+    user_model = await UserCrud.get(phone)
+    if user_model.pwd == pwds.pwd:
         raise ErrorMessage(
             status_code=500,
             message="新密码与老密码相同"
         )
-    # 用户密码正确
-    if await UserCrud.has_pwd(phone, pwds.old_pwd):
-        user_model = await UserCrud.get(phone)
-        await UserCrud.update_pwd(user_model, pwds.new_pwd)
-        return True
-    raise ErrorMessage(
-        status_code=500,
-        message="密码输入错误，不能修改"
-    )
+    await UserCrud.update_pwd(user_model, pwds.pwd)
+    return True
 
 # 刷新token
 @login_router.put(

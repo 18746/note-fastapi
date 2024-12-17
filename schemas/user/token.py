@@ -19,8 +19,7 @@ class TokenOut(BaseModel):
 
 # 更新密码
 class UpdatePwdIn(BaseModel):
-    old_pwd: str = PasswordStrDef("")
-    new_pwd: str = PasswordStrDef("")
+    pwd: str = PasswordStrDef("")
 
 
 

@@ -17,7 +17,7 @@ class UpdateUserInfoIn(BaseModel):
 
     username: str = NameStrDef(None)    # info中的 字段
 
-    picture: UploadFile | None = None
+    picture: UploadFile | str = ''
 
 # 返回的用户信息
 class UserInfoOut(BaseModel):
