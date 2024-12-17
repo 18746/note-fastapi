@@ -7,7 +7,7 @@ def PhoneStrDef(default: str | None = None):
     return Field(default=default, pattern="^1[3456789]\d{9}$")
 
 def EmailStrDef(default: str | None = None):
-    return Field(default=default, pattern="^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}$")
+    return Field(default=default, pattern="^$|^([A-Za-z0-9\\u4e00-\\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z]{2,8})+)$")
 
 def PasswordStrDef(default: str | None = None):
     return Field(default=default, min_length=8)
