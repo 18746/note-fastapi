@@ -2,7 +2,7 @@ import os
 import shutil
 import random
 
-from core.config import ROOT_PATH
+from core.application import ROOT_PATH
 
 class File:
     @staticmethod

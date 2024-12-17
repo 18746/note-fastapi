@@ -5,7 +5,7 @@ from utils import util
 from utils.file import Folder as FolderConfig, File as FileConfig, get_course_img
 
 from models.course import Course as CourseModel
-from core.config import IP_URL
+from core.application import IP_URL
 
 # -----------------------------------------------------------------------------查
 async def get_phone(phone: str) -> list[CourseModel]:

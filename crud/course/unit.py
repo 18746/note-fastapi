@@ -10,7 +10,7 @@ from models.course import Course as CourseModel
 
 from crud.course    import course as CourseCrud
 from schemas.course import unit   as UnitSchemas
-from core.config import IP_URL
+from core.application import IP_URL
 
 
 # 获取某个章节信息

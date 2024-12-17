@@ -1,11 +1,3 @@
-import os
-
-# 根目录
-ROOT_PATH = "Z:/99.笔记"
-PROJECT_PATH = os.getcwd()
-
-IP_URL = "http://127.0.0.1:8070"
-
 # 数据库配置
 TORTOISE_ORM = {
     "connections": {             # 数据库连接
@@ -60,3 +52,14 @@ TORTOISE_ORM = {
     "timezone": "Asia/Shanghai",   # 时区
     # "timezone": "UTC"
 }
+
+from fastapi import FastAPI
+from tortoise.contrib.fastapi import register_tortoise
+
+def app_bind_database(app: FastAPI):
+    register_tortoise(
+        app=app,
+        config=TORTOISE_ORM
+    )
+
+

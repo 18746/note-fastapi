@@ -21,17 +21,17 @@ pip install python-multipart  # 上传文件
 ### 1.3 aerich
 
 ```cmd
-pip install aerich            # 安装数据库迁移
+pip install aerich                          # 安装数据库迁移
 
-aerich init -t configs.TORTOISE_ORM     # 生成迁移文件，只需要执行一次
-aerich init-db                          # 初始化数据库（生成各种表）
+aerich init -t core.config.TORTOISE_ORM     # 生成迁移文件，只需要执行一次
+aerich init-db                              # 初始化数据库（生成各种表）
 
 # 当数据库模型变更后，执行，更新数据库
-aerich migrate [--name "更新信息"]       # 执行迁移文件，生成更新表结构的文件
-aerich upgrade                          # 根据迁移文件，升级数据库
-aerich downgrade                        # 根据迁移文件，降级数据库
+aerich migrate [--name "更新信息"]            # 执行迁移文件，生成更新表结构的文件
+aerich upgrade                              # 根据迁移文件，升级数据库
+aerich downgrade                            # 根据迁移文件，降级数据库
 
-aerich history                          # 查看迁移文件历史
+aerich history                              # 查看迁移文件历史
 ```
 
 ## 2. 生成依赖配置文件
