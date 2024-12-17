@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, UploadFile, Body, Form
+from fastapi import APIRouter, Header, UploadFile, Body, Form, BackgroundTasks
 from typing import Annotated
 from datetime import datetime
 from utils.exception import ErrorMessage
@@ -407,7 +407,7 @@ async def delete_unit(phone: str, course_no: str, unit_no: str):
     summary="更新章节内容",
     description="返回 更新后的值",
 )
-async def update_context(phone: str, course_no: str, unit_no: str, text: Annotated[str, Body()]):
+async def update_context(phone: str, course_no: str, unit_no: str, text: Annotated[str, Body()], background_tasks: BackgroundTasks):
     if await UnitCrud.has_unit(phone=phone, course_no=course_no, unit_no=unit_no):
         curr_course = await CourseCrud.get_course(phone, course_no)
         all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
@@ -421,6 +421,8 @@ async def update_context(phone: str, course_no: str, unit_no: str, text: Annotat
             FolderConfig.open_path(f"/{path}/{curr_unit.name}/picture.00.index")
         else:
             FolderConfig.open_path(f"/{path}/picture.{curr_unit.name}")
+
+        # background_tasks.add_task(UnitCrud.delete_phone_time_limit, user_model)
 
         img_name_list = FileConfig.all_file()
 

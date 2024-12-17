@@ -89,7 +89,7 @@ async def update_pwd(phone: Annotated[str, Header()], pwds: TokenSchema.UpdatePw
     description="返回更新后的token信息",
     response_model=TokenSchema.TokenOut
 )
-async def refresh_token(phone: Annotated[str, Header()], token: Annotated[str, Header()],  background_tasks: BackgroundTasks):
+async def refresh_token(phone: Annotated[str, Header()], token: Annotated[str, Header()], background_tasks: BackgroundTasks):
     user_model = await UserCrud.get(phone)
     # 删除过期token，及 超出允许的设备数量的token
     background_tasks.add_task(TokenCrud.delete_phone_time_limit, user_model)

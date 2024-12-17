@@ -49,7 +49,7 @@ async def get_unit(phone: str, course_no: str, unit_no: str):
 @unit_router.get(
     "/{phone}/{course_no}/{unit_no}/content",
     summary="获取章节内容",
-    description="返回新增的课程章节",
+    description="返回章节内容",
 )
 async def get_content(phone: str, course_no: str, unit_no: str):
     if await UnitCrud.has_unit(phone=phone, course_no=course_no, unit_no=unit_no):
@@ -71,7 +71,7 @@ async def get_content(phone: str, course_no: str, unit_no: str):
         message="课程单元不存在，查询不到"
     )
 
-# 获取章节内图标
+# 获取章节内图片
 @unit_router.get(
     "/picture/{phone}/{course_no}/{unit_no}/{file_path:path}",
     summary="获取章节内图标",
@@ -89,7 +89,6 @@ async def get_picture(phone: str, course_no: str, unit_no: str, file_path):
     else:
         FolderConfig.open_path(f"/{path}")
 
-    print(path, curr_unit.name, file_path)
     return Response(content=FileConfig.read(file_path))
 
 
@@ -125,6 +124,7 @@ async def delete_unit(phone: str, course_no: str, unit_no: str):
             FolderConfig.delete(unit.name)
         else:
             FileConfig.delete(unit.name + ".md")
+            FolderConfig.delete(f"picture.{unit.name}")
         return await UnitCrud.delete_deep_unit(all_unit, unit.unit_no)
 
 
