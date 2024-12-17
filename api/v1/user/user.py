@@ -49,6 +49,7 @@ async def create(phone: str, user: UserSchema.CreateUserIn):
         user_model = await UserCrud.create(phone, user)
         user_info = await UserInfoCrud.create(phone, user)
 
+        UserInfoCrud.init_userinfo_picture_url(phone, [user_info])
         return UserInfoCrud.get_info(user_model, user_info)
     raise ErrorMessage(
         status_code=500,

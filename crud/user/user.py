@@ -1,12 +1,10 @@
-from fastapi import UploadFile
 from datetime import datetime
 
 from utils.util import time_comparison
-from utils.file import Folder as FolderConfig, File as FileConfig, get_picture
+from utils.file import Folder as FolderConfig, File as FileConfig
 
 from models.user import User as UserModel
-
-from schemas.user import user as  UserSchema
+from schemas.user import user as UserSchema
 
 # ----------------------------------------------------------User
 

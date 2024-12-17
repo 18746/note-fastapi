@@ -29,6 +29,7 @@ async def get_userinfo(phone: Annotated[str, Header()]):
     user = await UserCrud.get(phone)
     user_info = await UserInfoCrud.get(phone)
 
+    UserInfoCrud.init_userinfo_picture_url(phone, [user_info])
     return UserInfoCrud.get_info(user, user_info)
 
 # 更新用户数据
@@ -48,6 +49,7 @@ async def update(phone: Annotated[str, Header()], user_info: Annotated[UserSchem
         user_model = await UserCrud.update(user_model, user_dict)
         userinfo_model = await UserInfoCrud.update(userinfo_model, user_dict)
 
+    UserInfoCrud.init_userinfo_picture_url(phone, [userinfo_model])
     return UserInfoCrud.get_info(user_model, userinfo_model)
 
 # 更改头像

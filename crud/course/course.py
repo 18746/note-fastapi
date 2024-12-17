@@ -1,10 +1,10 @@
 from fastapi import UploadFile
 from datetime import datetime
 
+from models.course import Course as CourseModel
+
 from utils import util
 from utils.file import Folder as FolderConfig, File as FileConfig, get_course_img
-
-from models.course import Course as CourseModel
 from core.application import IP_URL
 
 # -----------------------------------------------------------------------------查
