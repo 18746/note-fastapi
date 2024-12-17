@@ -101,7 +101,9 @@ async def create(phone: str, course: Annotated[CourseSchemas.CourseCreateIn, For
             status_code=500,
             message="课程类型不存在，请检查"
         )
-    return await CourseCrud.create(phone, course.model_dump(exclude_unset=True))
+    course = await CourseCrud.create(phone, course.model_dump(exclude_unset=True))
+    CourseCrud.init_course_picture_url(phone, [course, ])
+    return course
 
 @course_router.put(
     "/{phone}/{course_no}",
@@ -132,7 +134,9 @@ async def update(phone: str, course_no: str, course: Annotated[CourseSchemas.Cou
 
         course_model = await CourseCrud.get_course(phone, course_no)
 
-        return await CourseCrud.update(course_model, course.model_dump(exclude_unset=True))
+        course = await CourseCrud.update(course_model, course.model_dump(exclude_unset=True))
+        CourseCrud.init_course_picture_url(phone, [course, ])
+        return course
     raise ErrorMessage(
         status_code=500,
         message="课程不存在，不能更新"

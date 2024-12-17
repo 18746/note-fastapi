@@ -5,7 +5,7 @@ from utils import util
 from utils.file import Folder as FolderConfig, File as FileConfig, get_course_img
 
 from models.course import Course as CourseModel
-
+from core.config import IP_URL
 
 # -----------------------------------------------------------------------------查
 async def get_phone(phone: str) -> list[CourseModel]:
@@ -97,13 +97,13 @@ async def update(course_model: CourseModel, course: dict) -> CourseModel:
     await course_model.save()
     return course_model
 
-def update_picture(course_model: CourseModel, picture: UploadFile):
-    phone = course_model.phone
-    course_name = course_model.name
+def update_picture(course: CourseModel, picture: UploadFile):
+    phone = course.phone
+    course_name = course.name
     FolderConfig.open_path(f"/{phone}/{course_name}")
 
-    if course_model.picture:
-        FileConfig.delete(course_model.picture)
+    if course.picture:
+        FileConfig.delete(course.picture)
 
     name_suffix = picture.filename.split(".")[-1]
     name = util.get_no("img_") + '.' + name_suffix
@@ -111,10 +111,10 @@ def update_picture(course_model: CourseModel, picture: UploadFile):
 
     return name
 
-async def delete(phone: str, course_model: CourseModel) -> int:
-    await course_model.delete()
+async def delete(phone: str, course: CourseModel) -> int:
+    await course.delete()
     FolderConfig.open_path(f"/{phone}")
-    FolderConfig.delete(course_model.name)
+    FolderConfig.delete(course.name)
     return 1
 
 async def delete_all(phone: str) -> int:
@@ -126,3 +126,8 @@ async def del_type(phone: str, type_no: str):
     await CourseModel.filter(phone=phone, type_no=type_no).update(
         type_no=None
     )
+
+# 初始化课程图标url
+def init_course_picture_url(phone: str, course_list: list[CourseModel]):
+    for course in course_list:
+        course.picture = f'{IP_URL}/course/picture/{phone}/{course.name}/{course.picture}'

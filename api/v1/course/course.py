@@ -28,7 +28,9 @@ course_router = APIRouter(
     response_model=list[CourseSchemas.CourseOut]
 )
 async def get_phone(phone: str):
-    return await CourseCrud.get_phone(phone)
+    course_list = await CourseCrud.get_phone(phone)
+    CourseCrud.init_course_picture_url(phone, course_list)
+    return course_list
 
 # 查询课程
 @course_router.get(
@@ -40,7 +42,9 @@ async def get_phone(phone: str):
 async def get_type(phone: str, type_no: str):
     if type_no == "":
         type_no = None
-    return await CourseCrud.get_type(phone, type_no)
+    course_list = await CourseCrud.get_type(phone, type_no)
+    CourseCrud.init_course_picture_url(phone, course_list)
+    return course_list
 
 # 查询课程
 @course_router.get(
@@ -51,7 +55,9 @@ async def get_type(phone: str, type_no: str):
 )
 async def get_course(phone: str, course_no: str):
     if await CourseCrud.has_course(phone, course_no):
-        return await CourseCrud.get_course(phone, course_no)
+        course = await CourseCrud.get_course(phone, course_no)
+        CourseCrud.init_course_picture_url(phone, [course, ])
+        return course
     raise ErrorMessage(
         status_code=500,
         message="课程不存在，查询不到"
