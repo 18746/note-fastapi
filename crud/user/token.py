@@ -1,5 +1,7 @@
 from fastapi import BackgroundTasks
 from datetime import datetime, timedelta
+import random
+import base64
 
 from models.user import User as UserModel
 from models.user import Token as TokenModel
@@ -37,7 +39,7 @@ def no_expire(token: TokenModel) -> bool:
 async def create(phone: str, token: dict) -> TokenModel:
     now = datetime.now()
     if "token" not in token:
-        token["token"] = util.get_no("T_")
+        token["token"] = new_token(phone=phone)
     if "time_limit" not in token:
         token["time_limit"] = 30
 
@@ -73,7 +75,7 @@ async def delete(phone: str) -> int:
 # -----------------------------------------------------------------------------------------------------
 # 刷新token
 async def refresh(token_model: TokenModel) -> TokenModel:
-    return await update(token_model, {"token": util.get_no("T_")})
+    return await update(token_model, {"token": new_token(phone=token_model.phone)})
 
 # 删除账户过期的登录信息，超出设备数量的也删除
 async def delete_phone_time_limit(user: UserModel):
@@ -91,7 +93,16 @@ async def delete_phone_time_limit(user: UserModel):
     for item in expire_token_value:
         await item.delete()
 
+def new_token(phone: str):
+    date_time = datetime.now()
+    date_time_strf = date_time.strftime('%Y%m%d%H%M')
 
+    random.seed(date_time.timestamp() * 100)
+    ran_int = random.randint(100000, 999999)
+
+    s = f"{date_time_strf}{ran_int}"
+    s_bytes = s.encode('utf-8')
+    return f"Token_{phone}_{base64.b64encode(s_bytes).decode("utf-8")}"
 
 
 
