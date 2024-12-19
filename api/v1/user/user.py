@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse, Response
 from typing import Annotated
 
 from utils.exception import ErrorMessage
-from utils.file import Folder as FolderConfig, File as FileConfig, get_picture
+from utils.file import Folder as FolderConfig, File as FileConfig
 
 from schemas.user import user     as UserSchema   # 定义数据结构的类
 from crud.user    import user     as UserCrud     # 操作数据库的函数

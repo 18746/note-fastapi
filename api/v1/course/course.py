@@ -3,7 +3,8 @@ from fastapi.responses import FileResponse, Response
 from typing import Annotated
 
 from utils.exception import ErrorMessage
-from utils.file import Folder as FolderConfig, File as FileConfig, get_picture
+from utils.file import Folder as FolderConfig, File as FileConfig
+from picture.picture import get_background_img
 
 from crud.course    import course as CourseCrud
 from schemas.course import course as CourseSchemas
@@ -18,6 +19,18 @@ course_router = APIRouter(
     tags=["course管理"],
     deprecated=False
 )
+
+# 获取背景图片
+@course_router.get(
+    "/picture/background",
+    summary="获取背景图片",
+    description="返回图片",
+    deprecated=False
+)
+async def get_picture():
+    image = get_background_img()
+
+    return Response(content=image.context)
 
 
 # 查询用户所有课程

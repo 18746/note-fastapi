@@ -4,7 +4,8 @@ from datetime import datetime
 from models.course import Course as CourseModel
 
 from utils import util
-from utils.file import Folder as FolderConfig, File as FileConfig, get_course_img
+from utils.file import Folder as FolderConfig, File as FileConfig
+from picture.picture import get_course_img
 from core.application import IP_URL
 
 # -----------------------------------------------------------------------------查

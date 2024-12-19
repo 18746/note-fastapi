@@ -1,6 +1,5 @@
 import os
 import shutil
-import random
 
 from core.application import ROOT_PATH
 
@@ -154,38 +153,6 @@ class Folder:
             for file_name in os.listdir()
             if os.path.isdir(file_name)
         ]
-
-
-class Picture:
-    name: str
-    context: bytes
-    def __init__(self, name: str, context: bytes):
-        self.name = name
-        self.context = context
-
-def get_picture() -> Picture:
-    Folder.open_path("/img/touxiang")
-
-    file_list = File.all_file()
-    file_name: str = random.choice(file_list)
-    context = File.read(file_name)
-
-    return Picture(
-        name= file_name,
-        context= context
-    )
-
-def get_course_img() -> Picture:
-    Folder.open_path("/img/course")
-
-    file_list = File.all_file()
-    file_name = random.choice(file_list)
-    context = File.read(file_name)
-
-    return Picture(
-        name=file_name,
-        context=context
-    )
 
 
 if __name__ == '__main__':

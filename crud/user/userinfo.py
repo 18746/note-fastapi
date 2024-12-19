@@ -7,7 +7,8 @@ from crud.user    import user as UserCrud     # 操作数据库的函数
 from schemas.user import user as UserSchema
 
 from utils import util
-from utils.file import Folder as FolderConfig, File as FileConfig, get_picture
+from utils.file import Folder as FolderConfig, File as FileConfig
+from picture.picture import get_user_img
 from core.application import IP_URL
 
 # 返回用户信息 没有的话创建一个
@@ -26,7 +27,7 @@ async def create(phone: str, userinfo: dict) -> UserInfoModel:
     if "username" not in userinfo:
         userinfo["username"] = util.get_no("User_")
 
-    image = get_picture()
+    image = get_user_img()
     name_suffix = image.name.split('.')[-1]
     name = util.get_no("img_") + '.' + name_suffix
 
