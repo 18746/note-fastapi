@@ -47,7 +47,7 @@ async def get_unit(phone: str, course_no: str, unit_no: str):
 
 # 获取章节内容
 @unit_router.get(
-    "/{phone}/{course_no}/{unit_no}/content",
+    "/content/{phone}/{course_no}/{unit_no}",
     summary="获取章节内容",
     description="返回章节内容",
 )

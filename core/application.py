@@ -2,8 +2,6 @@
 IP   = "127.0.0.1"
 PORT = 8070
 
-IP_URL = f"http://{IP}:{PORT}"
-
 APP_CONFIG = {
     "version": "1.0.0"
 }

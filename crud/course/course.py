@@ -6,7 +6,6 @@ from models.course import Course as CourseModel
 from utils import util
 from utils.file import Folder as FolderConfig, File as FileConfig
 from picture.picture import get_course_img
-from core.application import IP_URL
 
 # -----------------------------------------------------------------------------查
 async def get_phone(phone: str) -> list[CourseModel]:
@@ -131,4 +130,4 @@ async def del_type(phone: str, type_no: str):
 # 初始化课程图标url
 def init_course_picture_url(phone: str, course_list: list[CourseModel]):
     for course in course_list:
-        course.picture = f'{IP_URL}/course/picture/{phone}/{course.name}/{course.picture}'
+        course.picture = f'/course/picture/{phone}/{course.name}/{course.picture}'

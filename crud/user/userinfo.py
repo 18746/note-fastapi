@@ -9,7 +9,6 @@ from schemas.user import user as UserSchema
 from utils import util
 from utils.file import Folder as FolderConfig, File as FileConfig
 from picture.picture import get_user_img
-from core.application import IP_URL
 
 # 返回用户信息 没有的话创建一个
 async def get(phone: str) -> UserInfoModel:
@@ -80,5 +79,5 @@ def get_info(user: UserModel, user_info: UserInfoModel) -> UserSchema.UserInfoOu
 
 def init_userinfo_picture_url(phone: str, userinfo_list: list[UserInfoModel]):
     for userinfo in userinfo_list:
-        userinfo.picture = f'{IP_URL}/user/picture/{phone}/{userinfo.picture}'
+        userinfo.picture = f'/user/picture/{phone}/{userinfo.picture}'
 

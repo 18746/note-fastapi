@@ -10,7 +10,6 @@ from models.course import Course as CourseModel
 
 from crud.course    import course as CourseCrud
 from schemas.course import unit   as UnitSchemas
-from core.application import IP_URL
 
 
 # 获取某个章节信息
@@ -320,7 +319,7 @@ def get_deep_path(course: CourseModel, all_unit: list[UnitModel], unit_no: str, 
 
 
 def get_picture_url(phone: str, course: CourseModel, unit: UnitModel):
-    return f'{IP_URL}/unit/picture/{phone}/{course.course_no}/{unit.unit_no}'
+    return f'/unit/picture/{phone}/{course.course_no}/{unit.unit_no}'
 
 def get_context(path: str, phone: str, course: CourseModel, unit: UnitModel):
     picture_url = get_picture_url(phone, course, unit)
