@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Header, UploadFile, Body, Form, BackgroundTasks
+from fastapi.responses import FileResponse, Response
 from typing import Annotated
 from datetime import datetime
 from utils.exception import ErrorMessage
@@ -163,6 +164,29 @@ async def delete(phone: str, course_no: str):
         # 先删除课程下的所有章节
         await UnitCrud.delete_course(phone, course_no)
         return await CourseCrud.delete(phone, course_model)
+    raise ErrorMessage(
+        status_code=200,
+        message="课程不存在，不能删除"
+    )
+
+def deleteZip(phone: str, course_name_zip: str):
+    FolderConfig.open_path(f'/{phone}')
+    FileConfig.delete(course_name_zip)
+
+@course_router.get(
+    "/{phone}/{course_no}",
+    summary="导出课程笔记",
+    description="返回导出的压缩包",
+)
+async def export(phone: str, course_no: str, background_tasks: BackgroundTasks):
+    if await CourseCrud.has_course(phone, course_no):
+        course_model = await CourseCrud.get_course(phone, course_no)
+        FolderConfig.open_path(f'/{phone}')
+        FolderConfig.zip(f'{course_model.name}')
+        background_tasks.add_task(deleteZip, phone, f'{course_model.name}.zip')
+
+        # return Response(content=FileConfig.read(f'{course_model.name}.zip'))
+        return FileResponse(f'{course_model.name}.zip', filename=f'{course_model.name}.zip')
     raise ErrorMessage(
         status_code=200,
         message="课程不存在，不能删除"

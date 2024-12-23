@@ -1,5 +1,6 @@
 import os
 import shutil
+import zipfile
 
 from core.application import ROOT_PATH
 
@@ -154,14 +155,37 @@ class Folder:
             if os.path.isdir(file_name)
         ]
 
+    @staticmethod
+    def zip(folder_name: str):
+        zip_file_new = folder_name + '.zip'
+        filelist = []
+
+        for root, dirs, files in os.walk(folder_name, topdown=False):
+            if not files and not dirs:
+                filelist.append(root)
+            for name in files:
+                filelist.append(os.path.join(root, name))
+
+        zf = zipfile.ZipFile(zip_file_new, "w", zipfile.ZIP_DEFLATED)
+        for tar in filelist:
+            arcname = tar[len(folder_name):]
+            zf.write(tar, arcname)
+        zf.close()
+        print('该目录压缩成功！')
+
+
 
 if __name__ == '__main__':
 
-    curr_path = "\\img\\course"
-    Folder.open_path(curr_path)
-    li = File.all_file()
-    with open(li[0], "rb") as f:
-        print(f.read())
+    # curr_path = "\\img\\course"
+    # Folder.open_path(curr_path)
+    # li = File.all_file()
+    # with open(li[0], "rb") as f:
+    #     print(f.read())
+    #
+    # current_path = os.getcwd()
+    # print(current_path)
 
-    current_path = os.getcwd()
-    print(current_path)
+    month_rank_dir = "test_dir"
+
+    Folder.zip(month_rank_dir)
