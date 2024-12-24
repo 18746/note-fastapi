@@ -326,23 +326,23 @@ def get_context(path: str, phone: str, course: CourseModel, unit: UnitModel):
     if unit.is_menu:
         FolderConfig.open_path(f"/{path}/{unit.name}")
         content = FileConfig.read("00.index.md", b_flag=False)
-        content = content.replace('./picture.00.index', f'{picture_url}/picture.00.index')
+        content = content.replace('./picture.00.index', f'{picture_url}')
         return content
     else:
         FolderConfig.open_path(f"/{path}")
         content = FileConfig.read(f"{unit.name}.md", b_flag=False)
-        content = content.replace(f'./picture.{unit.name}', f'{picture_url}/picture.{unit.name}')
+        content = content.replace(f'./picture.{unit.name}', f'{picture_url}')
         return content
 
 def set_context(path: str, phone: str, course: CourseModel, unit: UnitModel, content: str):
     url = get_picture_url(phone, course, unit)
     if unit.is_menu:
         FolderConfig.open_path(f"/{path}/{unit.name}")
-        content = content.replace(f'{url}/picture.00.index', './picture.00.index')
+        content = content.replace(f'{url}', './picture.00.index')
         FileConfig.write("00.index.md", content, b_flag=False)
     else:
         FolderConfig.open_path(f"/{path}")
-        content = content.replace(f'{url}/picture.{unit.name}', f'./picture.{unit.name}')
+        content = content.replace(f'{url}', f'./picture.{unit.name}')
         FileConfig.write(f"{unit.name}.md", content, b_flag=False)
 
 # 上传图片
@@ -357,10 +357,6 @@ def upload_picture(path: str, phone: str, course: CourseModel, unit: UnitModel, 
     FileConfig.write(name, picture.file.read())
 
     url = get_picture_url(phone, course, unit)
-
-    if unit.is_menu:
-        return f"{url}/picture.00.index/{name}"
-    else:
-        return f"{url}/picture.{unit.name}/{name}"
+    return f"{url}/{name}"
 
 
