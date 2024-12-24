@@ -156,10 +156,12 @@ class Folder:
         ]
 
     @staticmethod
-    def zip(folder_name: str):
-        zip_file_new = folder_name + '.zip'
-        filelist = []
+    def zip(folder_name: str, prefix: str = ""):
+        zip_file_new = f"{folder_name}.zip"
+        if prefix:
+            zip_file_new = f"{prefix}_{zip_file_new}"
 
+        filelist = []
         for root, dirs, files in os.walk(folder_name, topdown=False):
             if not files and not dirs:
                 filelist.append(root)
@@ -171,7 +173,21 @@ class Folder:
             arcname = tar[len(folder_name):]
             zf.write(tar, arcname)
         zf.close()
-        print('该目录压缩成功！')
+
+        return zip_file_new
+
+    @staticmethod
+    def un_zip(file_name: str):
+        """unzip zip file"""
+        folder_name = ''.join(file_name.split('.')[0:-1])
+
+        os.mkdir(folder_name)
+
+        zip_file = zipfile.ZipFile(file_name)
+        for names in zip_file.namelist():
+            zip_file.extract(names, folder_name)
+        zip_file.close()
+        return folder_name
 
 
 
@@ -186,6 +202,10 @@ if __name__ == '__main__':
     # current_path = os.getcwd()
     # print(current_path)
 
-    month_rank_dir = "test_dir"
+    # month_rank_dir = "test_dir"
+    #
+    # Folder.zip(month_rank_dir)
 
-    Folder.zip(month_rank_dir)
+    Folder.un_zip("git.zip")
+
+

@@ -174,7 +174,7 @@ def deleteZip(phone: str, course_name_zip: str):
     FileConfig.delete(course_name_zip)
 
 @course_router.get(
-    "/{phone}/{course_no}",
+    "/export/{phone}/{course_no}",
     summary="导出课程笔记",
     description="返回导出的压缩包",
 )
@@ -182,14 +182,52 @@ async def export(phone: str, course_no: str, background_tasks: BackgroundTasks):
     if await CourseCrud.has_course(phone, course_no):
         course_model = await CourseCrud.get_course(phone, course_no)
         FolderConfig.open_path(f'/{phone}')
-        FolderConfig.zip(f'{course_model.name}')
-        background_tasks.add_task(deleteZip, phone, f'{course_model.name}.zip')
+        export_name = FolderConfig.zip(f'{course_model.name}', "export")
+        background_tasks.add_task(deleteZip, phone, export_name)
 
-        # return Response(content=FileConfig.read(f'{course_model.name}.zip'))
-        return FileResponse(f'{course_model.name}.zip', filename=f'{course_model.name}.zip')
+        FolderConfig.open_path(f'/{phone}')
+        return FileResponse(f'{course_model.name}.zip', filename=export_name)
     raise ErrorMessage(
-        status_code=200,
-        message="课程不存在，不能删除"
+        status_code=500,
+        message="课程不存在，不能导出"
+    )
+
+@course_router.post(
+    "/import/{phone}",
+    summary="导入课程笔记",
+    description="返回导入的课程",
+    response_model=CourseSchemas.CourseOut
+)
+async def import_course(phone: str, file: UploadFile, type_no: Annotated[str | None, Body()], background_tasks: BackgroundTasks):
+    filename = file.filename
+    if not await CourseCrud.has_same_name(phone, ".".join(filename.split('.')[0:-1])):
+        FolderConfig.open_path(f'/{phone}')
+        FileConfig.write(filename, file.file.read())
+        folder_name = FolderConfig.un_zip(filename)
+        FileConfig.delete(filename)
+
+        try:
+            if not type_no:
+                type_no = None
+            course_and_unit = CourseCrud.init_import_course(phone, folder_name, type_no)
+            course = course_and_unit[0]
+            unit_list = course_and_unit[1]
+            for item in unit_list:
+                await item.save()
+            await course.save()
+
+            CourseCrud.init_course_picture_url(phone, [course, ])
+            return course
+        except Exception as e:
+            FolderConfig.open_path(f'/{phone}')
+            FolderConfig.delete(folder_name)
+            raise ErrorMessage(
+                status_code=500,
+                message=str(e)
+            )
+    raise ErrorMessage(
+        status_code=500,
+        message="已存在同名课程，不能导入"
     )
 
 # -----------------------------------------------------------------------------------------章节
@@ -380,7 +418,8 @@ async def update(phone: str, course_no: str, unit_no: str, unit: UnitSchemas.Upd
                 all_unit = [item for item in all_unit if item.unit_no != old_unit.unit_no]
 
                 # 2.1 获取name序号
-                unit.name = UnitCrud.init_name_no(all_unit, unit.model_dump())
+                no_name = UnitCrud.name_split(UnitCrud.init_name_no(all_unit, unit.model_dump()))
+                unit.name = UnitCrud.num_name_connect(no_name[0] - 1, no_name[1])
 
                 # 2.2 更新数据
                 path = UnitCrud.get_deep_path(curr_course, all_unit, unit.parent_no, True)

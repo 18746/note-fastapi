@@ -20,9 +20,6 @@ def get_no(sign: str):
     date_time = datetime.now()
     date_time_strf = date_time.strftime('%Y%m%d%H%M')
 
-    timestamp = date_time.timestamp() * 100
-
-    random.seed(timestamp)
     ran_int = random.randint(100000, 999999)
 
     return f"{sign}{date_time_strf}{int(ran_int)}"
