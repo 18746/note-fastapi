@@ -73,23 +73,23 @@ async def get_content(phone: str, course_no: str, unit_no: str):
 
 # 获取章节内图片
 @unit_router.get(
-    "/picture/{phone}/{course_no}/{unit_no}/{file_path:path}",
+    "/picture/{phone}/{course_no}/{unit_no}/{file_name:path}",
     summary="获取章节内图标",
     description="返回图片",
     deprecated=False
 )
-async def get_picture(phone: str, course_no: str, unit_no: str, file_path):
+async def get_picture(phone: str, course_no: str, unit_no: str, file_name):
     curr_course = await CourseCrud.get_course(phone, course_no)
     all_unit = await UnitCrud.get_course_all_unit(phone, course_no)
     curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
 
     path = UnitCrud.get_deep_path(curr_course, all_unit, unit_no)
     if curr_unit.is_menu:
-        FolderConfig.open_path(f"/{path}/{curr_unit.name}")
+        FolderConfig.open_path(f"/{path}/{curr_unit.name}/picture.00.index")
     else:
-        FolderConfig.open_path(f"/{path}")
+        FolderConfig.open_path(f"/{path}/picture.{curr_unit.name}")
 
-    return Response(content=FileConfig.read(file_path))
+    return Response(content=FileConfig.read(file_name))
 
 
 # 删除章节
