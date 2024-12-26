@@ -96,39 +96,6 @@ def update_init(unit_model: UnitModel, unit: dict) -> UnitSchemas.UpdateUnitIn:
 
     return UnitSchemas.UpdateUnitIn(**unit)
 
-# 更新名称
-def update_name(unit_model: UnitModel, unit: dict, old_path: str = "", new_path: str = "", path: str = ""):
-    if path:
-        old_path = path
-        new_path = path
-    old_name = unit_model.name
-    new_name = unit_model.name
-    old_is_menu = unit_model.is_menu
-    new_is_menu = unit_model.is_menu
-    if "name" in unit:
-        new_name = unit["name"]
-    if "is_menu" in unit:
-        new_is_menu = unit["is_menu"]
-
-    if old_path and new_path:
-        if new_is_menu and not old_is_menu:
-            FolderConfig.open_path(old_path)
-            content = FileConfig.read(old_name + ".md", b_flag=False)
-            FileConfig.delete(old_name + ".md")
-            FolderConfig.create(new_name)
-            FileConfig.create(new_name + "/00.index.md", content.replace("picture." + old_name, "picture.00.index"), b_flag=False)
-            FolderConfig.move(old_path, new_path + "/" + new_name, "picture." + old_name, "picture.00.index")
-        elif not new_is_menu and old_is_menu:
-            FolderConfig.open_path(old_path)
-            content = FileConfig.read(old_name + "/00.index.md", b_flag=False)
-            FolderConfig.move(old_path + "/" + old_name, new_path, "picture.00.index", "picture." + new_name)
-            FolderConfig.delete(old_name)
-            FileConfig.create(new_name + ".md", content.replace("picture." + old_name, "picture.00.index"), b_flag=False)
-        else:
-            refresh_name(unit_model, new_name, old_path, new_path)
-
-    return unit_model
-
 # 深度删除章节 model
 async def delete_deep_unit(all_unit: list[UnitModel], unit_no: str) -> int:
     curr_unit = [item for item in all_unit if item.unit_no == unit_no][0]
@@ -249,6 +216,40 @@ async def refresh_list_name(all_unit: list[UnitModel],  parent_no: str | None, p
             current_unit.name = new_name
             await current_unit.save()
         index += 1
+
+# 更新名称
+def update_name(unit_model: UnitModel, unit: dict, old_path: str = "", new_path: str = "", path: str = ""):
+    if path:
+        old_path = path
+        new_path = path
+    old_name = unit_model.name
+    new_name = unit_model.name
+    old_is_menu = unit_model.is_menu
+    new_is_menu = unit_model.is_menu
+    if "name" in unit:
+        new_name = unit["name"]
+    if "is_menu" in unit:
+        new_is_menu = unit["is_menu"]
+
+    if old_path and new_path:
+        if new_is_menu and not old_is_menu:
+            FolderConfig.open_path(old_path)
+            content = FileConfig.read(f'{old_name}.md', b_flag=False)
+            FileConfig.delete(f'{old_name}.md')
+            FolderConfig.create(new_name)
+            FileConfig.create(new_name + "/00.index.md", content.replace(f'./picture.{old_name}', f'./picture.00.index'), b_flag=False)
+            FolderConfig.move(old_path, new_path + "/" + new_name, "picture." + old_name, "picture.00.index")
+        elif not new_is_menu and old_is_menu:
+            FolderConfig.open_path(old_path)
+            content = FileConfig.read(old_name + "/00.index.md", b_flag=False)
+            FolderConfig.move(old_path + "/" + old_name, new_path, "picture.00.index", "picture." + new_name)
+            FolderConfig.delete(old_name)
+            FileConfig.create(new_name + ".md", content.replace('./picture.00.index', f'./picture.{new_name}'), b_flag=False)
+        else:
+            refresh_name(unit_model, new_name, old_path, new_path)
+
+    return unit_model
+
 # 更新 name 序号（不切换is_menu）
 def refresh_name(unit_model: UnitModel, new_name: str, old_path: str = "", new_path: str = "", path: str = ""):
     if path:
@@ -260,11 +261,13 @@ def refresh_name(unit_model: UnitModel, new_name: str, old_path: str = "", new_p
         if old_name != new_name or old_path != new_path:
             FolderConfig.open_path(old_path)
             FolderConfig.move(old_path, new_path, old_name, new_name)
-            # 只需要移动最外层课程文件夹即可
-            # FolderConfig.move(old_path, new_path, "picture." + old_name, "picture." + new_name)
     else:
         if old_name != new_name or old_path != new_path:
             FolderConfig.open_path(old_path)
+            if old_name != new_name:
+                content = FileConfig.read(f'{old_name}.md', b_flag=False)
+                content = content.replace(f'./picture.{old_name}', f'./picture.{new_name}')
+                FileConfig.write(f'{old_name}.md', content, b_flag=False)
             FolderConfig.move(old_path, new_path, old_name + ".md", new_name + ".md")
             FolderConfig.move(old_path, new_path, "picture." + old_name, "picture." + new_name)
 
@@ -318,31 +321,34 @@ def get_deep_path(course: CourseModel, all_unit: list[UnitModel], unit_no: str, 
     return f"/{course.phone}/{course.name}{path}"
 
 
+# 返回规范的图片路径
 def get_picture_url(phone: str, course: CourseModel, unit: UnitModel):
     return f'/unit/picture/{phone}/{course.course_no}/{unit.unit_no}'
 
+# 获取内容
 def get_context(path: str, phone: str, course: CourseModel, unit: UnitModel):
     picture_url = get_picture_url(phone, course, unit)
     if unit.is_menu:
         FolderConfig.open_path(f"/{path}/{unit.name}")
         content = FileConfig.read("00.index.md", b_flag=False)
-        content = content.replace('./picture.00.index', f'{picture_url}/picture.00.index')
+        content = content.replace('./picture.00.index', f'{picture_url}')
         return content
     else:
         FolderConfig.open_path(f"/{path}")
         content = FileConfig.read(f"{unit.name}.md", b_flag=False)
-        content = content.replace(f'./picture.{unit.name}', f'{picture_url}/picture.{unit.name}')
+        content = content.replace(f'./picture.{unit.name}', f'{picture_url}')
         return content
 
+# 更新内容
 def set_context(path: str, phone: str, course: CourseModel, unit: UnitModel, content: str):
     url = get_picture_url(phone, course, unit)
     if unit.is_menu:
         FolderConfig.open_path(f"/{path}/{unit.name}")
-        content = content.replace(f'{url}/picture.00.index', './picture.00.index')
+        content = content.replace(f'{url}', './picture.00.index')
         FileConfig.write("00.index.md", content, b_flag=False)
     else:
         FolderConfig.open_path(f"/{path}")
-        content = content.replace(f'{url}/picture.{unit.name}', f'./picture.{unit.name}')
+        content = content.replace(f'{url}', f'./picture.{unit.name}')
         FileConfig.write(f"{unit.name}.md", content, b_flag=False)
 
 # 上传图片
@@ -357,10 +363,6 @@ def upload_picture(path: str, phone: str, course: CourseModel, unit: UnitModel, 
     FileConfig.write(name, picture.file.read())
 
     url = get_picture_url(phone, course, unit)
-
-    if unit.is_menu:
-        return f"{url}/picture.00.index/{name}"
-    else:
-        return f"{url}/picture.{unit.name}/{name}"
+    return f"{url}/{name}"
 
 

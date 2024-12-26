@@ -186,7 +186,7 @@ async def export(phone: str, course_no: str, background_tasks: BackgroundTasks):
         background_tasks.add_task(deleteZip, phone, export_name)
 
         FolderConfig.open_path(f'/{phone}')
-        return FileResponse(f'{course_model.name}.zip', filename=export_name)
+        return FileResponse(f'{export_name}', filename=f'{course_model.name}.zip')
     raise ErrorMessage(
         status_code=500,
         message="课程不存在，不能导出"
