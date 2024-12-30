@@ -143,7 +143,7 @@ def init_import_course_picture():
     if picture_list:
         return picture_list[0]
     else:
-        raise Exception("缺少课程图标")
+        raise Exception("格式错误，缺少课程图标")
 
 def init_import_course_unit(path: str, phone: str, course: CourseModel, parent_no: str | None = None, parent_name: str = "") -> list[UnitModel]:
     FolderConfig.open_path(path)

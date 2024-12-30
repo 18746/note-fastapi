@@ -175,10 +175,8 @@ class Folder:
         return zip_file_new
 
     @staticmethod
-    def un_zip(file_name: str):
+    def un_zip(file_name: str, folder_name: str):
         """unzip zip file"""
-        folder_name = ''.join(file_name.split('.')[0:-1])
-
         os.mkdir(folder_name)
 
         zip_file = zipfile.ZipFile(file_name)

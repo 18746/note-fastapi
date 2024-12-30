@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, UploadFile, Body, Form, BackgroundTasks
+from fastapi import APIRouter, Header, UploadFile, Body, Query, Form, BackgroundTasks
 from fastapi.responses import FileResponse, Response
 from typing import Annotated
 from datetime import datetime
@@ -175,10 +175,10 @@ def deleteZip(phone: str, course_name_zip: str):
 
 @course_router.get(
     "/export/chunks/{phone}/{course_no}",
-    summary="导出课程笔记",
+    summary="切片导出课程笔记",
     description="返回导出的压缩包",
 )
-async def export(phone: str, course_no: str, background_tasks: BackgroundTasks, key: str = ""):
+async def export_chunks(phone: str, course_no: str, background_tasks: BackgroundTasks, key: str = ""):
     if await CourseCrud.has_course(phone, course_no):
         course_model = await CourseCrud.get_course(phone, course_no)
         FolderConfig.open_path(f'/{phone}')
@@ -219,6 +219,76 @@ async def export(phone: str, course_no: str, background_tasks: BackgroundTasks):
     )
 
 @course_router.post(
+    "/import/chunks/{phone}",
+    summary="切片导入课程笔记",
+    description="返回导入的课程",
+)
+async def import_chunks(phone: str, filename: Annotated[str, Body()], file: UploadFile, hash_val: Annotated[str, Body(alias="hash")]):
+    if not await CourseCrud.has_same_name(phone, ".".join(filename.split('.')[0:-1])):
+        FolderConfig.open_path(f'/{phone}')
+        filename_list = FileConfig.all_file()
+        file_name = '.'.join(filename.split('.')[0:-1])
+        full_filename = f"{file_name}_{hash_val}.{filename.split('.')[-1]}"
+        for filename in filename_list:
+            if filename != full_filename and filename.split('.')[1] == "zip" and filename.split('_')[0] == file_name:
+                FileConfig.delete(filename)
+        FileConfig.write(full_filename, file.file.read(), append=True)
+
+        return True
+    raise ErrorMessage(
+        status_code=500,
+        message="已存在同名课程，不能导入"
+    )
+
+
+@course_router.get(
+    "/import/chunks_done/{phone}",
+    summary="导入课程笔记，完成",
+    description="返回导入的课程",
+    response_model=CourseSchemas.CourseOut
+)
+async def import_course_done(phone: str, type_no: Annotated[str | None, Query()], filename: Annotated[str, Query()], hash_val: Annotated[str, Query(alias="hash")]):
+    if not await CourseCrud.has_same_name(phone, ".".join(filename.split('.')[0:-1])):
+        FolderConfig.open_path(f'/{phone}')
+        folder_name = '.'.join(filename.split('.')[0:-1])
+        full_filename = f"{folder_name}_{hash_val}.{filename.split('.')[-1]}"
+
+        try:
+            FolderConfig.un_zip(full_filename, folder_name)
+            FileConfig.delete(full_filename)
+        except Exception as e:
+            FolderConfig.open_path(f'/{phone}')
+            FolderConfig.delete(folder_name)
+            raise ErrorMessage(
+                status_code=500,
+                message="文件受损，解压失败，请检查后重试"
+            )
+
+        try:
+            if not type_no:
+                type_no = None
+            course_and_unit = CourseCrud.init_import_course(phone, folder_name, type_no)
+            course = course_and_unit[0]
+            unit_list = course_and_unit[1]
+            for item in unit_list:
+                await item.save()
+            await course.save()
+
+            CourseCrud.init_course_picture_url(phone, [course, ])
+            return course
+        except Exception as e:
+            FolderConfig.open_path(f'/{phone}')
+            FolderConfig.delete(folder_name)
+            raise ErrorMessage(
+                status_code=500,
+                message=str(e)
+            )
+    raise ErrorMessage(
+        status_code=500,
+        message="已存在同名课程，不能导入"
+    )
+
+@course_router.post(
     "/import/{phone}",
     summary="导入课程笔记",
     description="返回导入的课程",
@@ -229,7 +299,7 @@ async def import_course(phone: str, file: UploadFile, type_no: Annotated[str | N
     if not await CourseCrud.has_same_name(phone, ".".join(filename.split('.')[0:-1])):
         FolderConfig.open_path(f'/{phone}')
         FileConfig.write(filename, file.file.read())
-        folder_name = FolderConfig.un_zip(filename)
+        folder_name = FolderConfig.un_zip(filename, ''.join(filename.split('.')[0:-1]))
         FileConfig.delete(filename)
 
         try:
