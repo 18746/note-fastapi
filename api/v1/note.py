@@ -174,6 +174,32 @@ def deleteZip(phone: str, course_name_zip: str):
     FileConfig.delete(course_name_zip)
 
 @course_router.get(
+    "/export/chunks/{phone}/{course_no}",
+    summary="导出课程笔记",
+    description="返回导出的压缩包",
+)
+async def export(phone: str, course_no: str, background_tasks: BackgroundTasks, key: str = ""):
+    if await CourseCrud.has_course(phone, course_no):
+        course_model = await CourseCrud.get_course(phone, course_no)
+        FolderConfig.open_path(f'/{phone}')
+        export_name = f"{course_model.name}_{key}.zip"
+        if not FileConfig.has(export_name):
+            filename_list = FileConfig.all_file()
+            for filename in  filename_list:
+                if filename.split('.')[1] == "zip" and filename.split('_')[0] == course_model.name:
+                    FileConfig.delete(filename)
+
+            export_name = FolderConfig.zip(f'{course_model.name}', export_name)
+            # background_tasks.add_task(deleteZip, phone, export_name)
+
+        FolderConfig.open_path(f'/{phone}')
+        return FileResponse(f'{export_name}', filename=f'{course_model.name}.zip', status_code=200)
+    raise ErrorMessage(
+        status_code=500,
+        message="课程不存在，不能导出"
+    )
+
+@course_router.get(
     "/export/{phone}/{course_no}",
     summary="导出课程笔记",
     description="返回导出的压缩包",
@@ -182,7 +208,7 @@ async def export(phone: str, course_no: str, background_tasks: BackgroundTasks):
     if await CourseCrud.has_course(phone, course_no):
         course_model = await CourseCrud.get_course(phone, course_no)
         FolderConfig.open_path(f'/{phone}')
-        export_name = FolderConfig.zip(f'{course_model.name}', "export")
+        export_name = FolderConfig.zip(f'{course_model.name}', f"export_{course_model.name}.zip")
         background_tasks.add_task(deleteZip, phone, export_name)
 
         FolderConfig.open_path(f'/{phone}')

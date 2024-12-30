@@ -156,10 +156,8 @@ class Folder:
         ]
 
     @staticmethod
-    def zip(folder_name: str, prefix: str = ""):
-        zip_file_new = f"{folder_name}.zip"
-        if prefix:
-            zip_file_new = f"{prefix}_{zip_file_new}"
+    def zip(folder_name: str, zip_name: str = ""):
+        zip_file_new = f"{zip_name}"
 
         filelist = []
         for root, dirs, files in os.walk(folder_name, topdown=False):
