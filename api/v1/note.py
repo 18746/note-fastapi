@@ -223,15 +223,19 @@ async def export(phone: str, course_no: str, background_tasks: BackgroundTasks):
     summary="切片导入课程笔记",
     description="返回导入的课程",
 )
-async def import_chunks(phone: str, filename: Annotated[str, Body()], file: UploadFile, hash_val: Annotated[str, Body(alias="hash")]):
+async def import_chunks(phone: str, filename: Annotated[str, Body()], file: UploadFile, hash_val: Annotated[str, Body(alias="hash")], chunk_index: Annotated[int, Body()]):
     if not await CourseCrud.has_same_name(phone, ".".join(filename.split('.')[0:-1])):
         FolderConfig.open_path(f'/{phone}')
+
         filename_list = FileConfig.all_file()
         file_name = '.'.join(filename.split('.')[0:-1])
         full_filename = f"{file_name}_{hash_val}.{filename.split('.')[-1]}"
         for filename in filename_list:
             if filename != full_filename and filename.split('.')[1] == "zip" and filename.split('_')[0] == file_name:
                 FileConfig.delete(filename)
+            elif chunk_index == 0 and filename.split('.')[1] == "zip" and filename.split('_')[0] == file_name:
+                FileConfig.delete(filename)
+
         FileConfig.write(full_filename, file.file.read(), append=True)
 
         return True
