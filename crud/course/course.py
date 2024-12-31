@@ -118,6 +118,10 @@ def update_picture(course: CourseModel, picture: UploadFile):
 async def delete(phone: str, course: CourseModel) -> int:
     await course.delete()
     FolderConfig.open_path(f"/{phone}")
+    filename_list = FileConfig.all_file()
+    for filename in filename_list:
+        if filename.split('.')[1] == "zip" and filename.split('_')[0] == course.name:
+            FileConfig.delete(filename)
     FolderConfig.delete(course.name)
     return 1
 
