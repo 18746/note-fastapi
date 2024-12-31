@@ -39,7 +39,23 @@ class TokenMiddleware(BaseHTTPMiddleware):
                 },
             )
         else:
+            phone = request.headers.get("phone")
+            token = request.headers.get("token")
+            not_token = False
+            if phone and token:
+                if request.url.path[0:7] == "/course" or request.url.path[0:5] == "/type" or request.url.path[0:5] == "/unit":
+                    # 1.1 用户存在
+                    if await UserCrud.has(phone):
+                        user_model = await UserCrud.get(phone)
+                        # 1.2 用户未过期
+                        if UserCrud.no_expire(user_model):
+                            # 2.1 token不存在
+                            if not await TokenCrud.has_token(phone, token):
+                                not_token = True
+
             response = await call_next(request)
+            if not_token:
+                response.headers["not-token"] = "1"
             # print("after2 request")       # 响应代码块
             return response
 
